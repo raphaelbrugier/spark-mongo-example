@@ -10,11 +10,11 @@ import org.bson.Document
 object MainNasa extends App with LazyLogging {
 
   val conf = new SparkConf()
-    .setAppName("mongotnasa")
+    .setAppName("mongonasa")
     .setMaster("local[*]")
     .set("spark.sql.shuffle.partitions", "2")
 
-    val sc = new SparkContext(conf)
+  val sc = new SparkContext(conf)
 
   val readConfig = ReadConfig( Map("spark.mongodb.input.uri" -> "mongodb://127.0.0.1/nasa.eva"))
   val evaRdd = sc.loadFromMongoDB( readConfig = readConfig )
