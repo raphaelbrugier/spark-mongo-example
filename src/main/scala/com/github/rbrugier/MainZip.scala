@@ -2,10 +2,9 @@ package com.github.rbrugier
 
 import com.mongodb.spark._
 import com.mongodb.spark.config.ReadConfig
-import com.mongodb.spark.rdd.MongoRDD
 import com.mongodb.spark.sql._
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.{SparkConf, SparkContext}
 import org.bson.Document
@@ -86,13 +85,10 @@ object MainZip extends App with LazyLogging {
     .drop($"max_pop")
     .drop($"min_pop")
 
-  minMaxCities
-//    .show()
-
   MongoSpark
     .write(minMaxCities)
     .option("spark.mongodb.output.uri", "mongodb://127.0.0.1/test" )
     .option("collection","minMaxCities")
     .mode("overwrite")
-    .save()
+//    .save()
 }
