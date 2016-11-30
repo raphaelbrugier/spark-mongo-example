@@ -18,4 +18,13 @@ object MainSteps extends App with LazyLogging {
 
   zipDf.printSchema() // 3)
   zipDf.show()
+
+  println( "States with Populations above 10 Million" )
+  zipDf.groupBy("state")
+    .sum("pop")
+    .withColumnRenamed("sum(pop)", "count")
+    .filter(zipDf("count") > 10000000)
+    .show()
+
+
 }
