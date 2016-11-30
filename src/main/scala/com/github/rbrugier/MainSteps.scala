@@ -1,10 +1,13 @@
 package com.github.rbrugier
 
+import com.mongodb.spark._
+import com.mongodb.spark.config.ReadConfig
 import com.mongodb.spark.sql._
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions.{max, min}
 import org.apache.spark.{SparkConf, SparkContext}
+import org.bson.Document
 
 object MainSteps extends App with LazyLogging {
 
@@ -60,6 +63,7 @@ object MainSteps extends App with LazyLogging {
     .show()
 
   // SparkSQL:
+  println( "SparkSQL" )
   zipDf.registerTempTable("zips") // 1)
   sqlContext.sql( // 2)
     """SELECT state, sum(pop) AS count
@@ -68,4 +72,20 @@ object MainSteps extends App with LazyLogging {
       HAVING sum(pop) > 10000000"""
   )
   .show()
+
+  // Aggregation pipeline integration:
+  println( "Aggregation pipeline integration" )
+  zipDf
+    .filter($"pop" > 0)
+    .show()
+
+  println( "RDD with Aggregation pipeline" )
+  val mongoRDD = sc.loadFromMongoDB(ReadConfig(conf)) // 1)
+  mongoRDD
+    .withPipeline(List( // 2)
+      Document.parse("""{ $group: { _id: "$state", totalPop: { $sum: "$pop" } } }"""),
+      Document.parse("""{ $match: { totalPop: { $gte: 10000000 } } }""")
+    ))
+    .collect()
+    .foreach(println)
 }
