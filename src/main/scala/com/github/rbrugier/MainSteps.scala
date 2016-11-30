@@ -58,4 +58,14 @@ object MainSteps extends App with LazyLogging {
     .drop($"max_pop")
     .drop($"min_pop") // 4)
     .show()
+
+  // SparkSQL:
+  zipDf.registerTempTable("zips") // 1)
+  sqlContext.sql( // 2)
+    """SELECT state, sum(pop) AS count
+      FROM zips
+      GROUP BY state
+      HAVING sum(pop) > 10000000"""
+  )
+  .show()
 }
