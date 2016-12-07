@@ -28,9 +28,9 @@ object MainSteps extends App with LazyLogging {
   import sqlContext.implicits._ // 1)
   zipDf.groupBy("state")
     .sum("pop")
-    .withColumnRenamed("sum(pop)", "count")
+    .withColumnRenamed("sum(pop)", "count") // 2)
     .filter($"count" > 10000000)
-    .show()
+    .show() // 3)
 
   // Query 2
   println( "Average City Population by State" )
@@ -50,17 +50,18 @@ object MainSteps extends App with LazyLogging {
     .sum("pop")
     .withColumnRenamed("sum(pop)", "count")
 
-  popByCity.join(
+  val minMaxCities = popByCity.join(
     popByCity
       .groupBy("state")
       .agg(max("count") as "max_pop", min("count") as "min_pop") // 2)
       .withColumnRenamed("state", "r_state"),
     $"state" === $"r_state" && ( $"count" === $"max_pop" || $"count" === $"min_pop") // 3)
-  )
+    )
     .drop($"r_state")
     .drop($"max_pop")
     .drop($"min_pop") // 4)
-    .show()
+  minMaxCities.show()
+
 
   // SparkSQL:
   println( "SparkSQL" )
@@ -88,4 +89,12 @@ object MainSteps extends App with LazyLogging {
     ))
     .collect()
     .foreach(println)
+
+  // Writing data in MongoDB:
+  MongoSpark
+    .write(minMaxCities)
+    .option("spark.mongodb.output.uri", "mongodb://127.0.0.1/test" )
+    .option("collection","minMaxCities")
+    .mode("overwrite")
+    .save()
 }
