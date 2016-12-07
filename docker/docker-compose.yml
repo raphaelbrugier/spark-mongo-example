@@ -2,5 +2,8 @@ version: '2'
 services:
   mongo:
     image: mongo:3.2
+    container_name: mongo_container
+    volumes:
+      - ./scripts:/scripts
     ports:
       - 27017:27017
