@@ -9,7 +9,7 @@ import org.apache.spark.sql.functions.{max, min}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.bson.Document
 
-object MainSteps extends App with LazyLogging {
+object MongoSparkMain extends App with LazyLogging {
 
   val conf = new SparkConf()
     .setAppName("mongozips")
