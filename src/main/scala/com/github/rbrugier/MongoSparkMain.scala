@@ -2,7 +2,6 @@ package com.github.rbrugier
 
 import com.mongodb.spark._
 import com.mongodb.spark.config.ReadConfig
-import com.mongodb.spark.sql._
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions.{max, min}
@@ -14,17 +13,17 @@ object MongoSparkMain extends App with LazyLogging {
   val conf = new SparkConf()
     .setAppName("mongozips")
     .setMaster("local[*]")
-    .set("spark.mongodb.input.uri", "mongodb://127.0.0.1/test.zips") // 1)
 
   val sc = new SparkContext(conf)
-  val sqlContext = new SQLContext(sc)
-  val zipDf = sqlContext.read.mongo() // 2)
+  val readConfig = ReadConfig(Map("uri" -> "mongodb://127.0.0.1/", "database" -> "test", "collection" -> "zips")) // 1)
+  val zipDf = sc.loadFromMongoDB(readConfig).toDF() // 2)
 
   zipDf.printSchema() // 3)
   zipDf.show()
 
   // Query 1
   println( "States with Populations above 10 Million" )
+  val sqlContext = new SQLContext(sc)
   import sqlContext.implicits._ // 1)
   zipDf.groupBy("state")
     .sum("pop")
@@ -81,7 +80,7 @@ object MongoSparkMain extends App with LazyLogging {
     .show()
 
   println( "RDD with Aggregation pipeline" )
-  val mongoRDD = sc.loadFromMongoDB(ReadConfig(conf)) // 1)
+  val mongoRDD = sc.loadFromMongoDB(readConfig) // 1)
   mongoRDD
     .withPipeline(List( // 2)
       Document.parse("""{ $group: { _id: "$state", totalPop: { $sum: "$pop" } } }"""),
